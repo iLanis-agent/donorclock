@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DonorClock - Blood Donation Tracker</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#120a0c; color:#f7ecec; min-height:100vh; }
+  .wrap { max-width:860px; margin:0 auto; padding:64px 24px 80px; }
+  .badge { display:inline-block; background:rgba(248,113,113,.12); color:#fca5a5; font-size:13px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:6px 14px; border-radius:999px; border:1px solid rgba(248,113,113,.25); margin-bottom:24px; }
+  h1 { font-size:clamp(38px,6vw,60px); line-height:1.05; font-weight:800; letter-spacing:-.02em; }
+  h1 .accent { background:linear-gradient(90deg,#fca5a5,#f87171); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { margin-top:20px; font-size:19px; line-height:1.6; color:#b39898; max-width:640px; }
+  .cta { display:inline-block; margin-top:36px; background:linear-gradient(90deg,#ef4444,#f87171); color:#fff; font-size:17px; font-weight:700; padding:16px 34px; border-radius:14px; text-decoration:none; box-shadow:0 8px 30px rgba(239,68,68,.35); transition:transform .15s; }
+  .cta:hover { transform:translateY(-2px); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-top:64px; }
+  .card { background:#1c1013; border:1px solid #3a1d22; border-radius:16px; padding:24px; }
+  .card h3 { font-size:17px; margin-bottom:10px; color:#fff; }
+  .card p { font-size:14.5px; line-height:1.55; color:#a78f8f; }
+  .icon { font-size:26px; margin-bottom:12px; }
+  footer { margin-top:72px; text-align:center; color:#6b4d4d; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">DonorClock</span>
+  <h1>Never wonder<br><span class="accent">"can I donate yet?"</span></h1>
+  <p class="sub">Whole blood, power red, platelets, plasma - every type runs on its own clock, and platelets cap at 24 per year. DonorClock tracks each interval and rolling limit for you, so the day you're eligible is never a guess.</p>
+  <a class="cta" href="app.html">Track my donations</a>
+  <div class="grid">
+    <div class="card"><div class="icon">🩸</div><h3>Four donation types</h3><p>56 days for whole blood, 112 for power red, 7 for platelets, 28 for plasma - each tracked independently.</p></div>
+    <div class="card"><div class="icon">📆</div><h3>Exact eligible dates</h3><p>See the day each type opens up again, including when platelet donations roll out of your 12-month cap.</p></div>
+    <div class="card"><div class="icon">❤️</div><h3>Your impact</h3><p>Total donations, liters given, and an estimate of lives touched - the number that makes the needle worth it.</p></div>
+    <div class="card"><div class="icon">🔥</div><h3>Year streaks</h3><p>Keep a donation streak alive across rolling 12-month periods. Small habit, real supply.</p></div>
+  </div>
+  <footer>Built by the App Factory - free, private, everything stays in your browser. Intervals follow common blood-service rules; your center's rules win.</footer>
+</div>
+</body>
+</html>
