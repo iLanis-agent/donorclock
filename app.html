@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DonorClock - Tracker</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#120a0c; color:#f7ecec; min-height:100vh; }
+  .wrap { max-width:920px; margin:0 auto; padding:36px 20px 80px; }
+  header { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+  .logo { font-weight:800; font-size:20px; }
+  .logo span { color:#fca5a5; }
+  .home { color:#a78f8f; text-decoration:none; font-size:14px; }
+  .home:hover { color:#fff; }
+  .panel { background:#1c1013; border:1px solid #3a1d22; border-radius:16px; padding:22px; margin-bottom:22px; }
+  label { display:block; font-size:12.5px; font-weight:600; color:#a78f8f; margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+  input, select { width:100%; background:#120a0c; border:1px solid #4a2830; border-radius:10px; color:#f7ecec; padding:11px 12px; font-size:15px; outline:none; }
+  input:focus { border-color:#ef4444; }
+  .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:130px; }
+  button.go { background:linear-gradient(90deg,#ef4444,#f87171); border:0; color:#fff; font-size:15px; font-weight:700; padding:12px 22px; border-radius:12px; cursor:pointer; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .tcard { background:#120a0c; border:1px solid #3a1d22; border-radius:14px; padding:18px 16px; }
+  .tcard.eligible { border-color:rgba(74,222,128,.4); }
+  .tcard .name { font-size:14px; font-weight:700; color:#fff; }
+  .tcard .status { font-size:24px; font-weight:800; margin:8px 0 2px; }
+  .tcard .status.yes { color:#4ade80; }
+  .tcard .status.no { color:#fca5a5; }
+  .tcard .detail { font-size:12.5px; color:#a78f8f; line-height:1.5; }
+  .tcard .badge-e { display:inline-block; font-size:11px; font-weight:800; padding:3px 9px; border-radius:999px; margin-top:8px; }
+  .badge-e.ok { background:rgba(74,222,128,.15); color:#4ade80; }
+  .badge-e.wait { background:rgba(251,191,36,.12); color:#fcd34d; }
+  .badge-e.cap { background:rgba(248,113,113,.15); color:#fca5a5; }
+  .stats { display:flex; flex-wrap:wrap; gap:30px; align-items:baseline; }
+  .stat-num { font-size:26px; font-weight:800; color:#fff; }
+  .stat-label { color:#a78f8f; font-size:13px; }
+  .seg-label { margin-bottom:14px; font-size:14px; font-weight:700; color:#fff; }
+  .tx { display:flex; justify-content:space-between; padding:9px 4px; border-bottom:1px solid #33191e; font-size:14px; color:#e0cccc; }
+  .remove { background:none; border:0; color:#6b4d4d; cursor:pointer; font-size:14px; }
+  .remove:hover { color:#f87171; }
+  .hint { font-size:12.5px; color:#6b4d4d; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="logo">Donor<span>Clock</span></div><a class="home" href="index.html">&#8592; Home</a></header>
+
+  <div class="panel">
+    <div class="seg-label">Log a donation</div>
+    <div class="row">
+      <div><label for="dtype">Type</label><select id="dtype"></select></div>
+      <div><label for="ddate">Date</label><input type="date" id="ddate"></div>
+      <div style="flex:0"><button class="go" id="log">Log it</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="seg-label">When can I donate again?</div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <div class="panel">
+    <div class="seg-label">Your impact</div>
+    <div class="stats">
+      <div><div class="stat-num" id="stDon">0</div><div class="stat-label">donations</div></div>
+      <div><div class="stat-num" id="stLit">0</div><div class="stat-label">liters given</div></div>
+      <div><div class="stat-num" id="stLives">0</div><div class="stat-label">est. lives touched</div></div>
+      <div><div class="stat-num" id="stStreak">0</div><div class="stat-label">year streak</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="histPanel">
+    <div class="seg-label">History</div>
+    <div id="hist"><div class="hint">Nothing logged yet.</div></div>
+  </div>
+</div>
+<script src="engine.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var LS = 'donorclock-donations';
+  var donations = [];
+  try { donations = JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) {}
+
+  DonorEngine.TYPES.forEach(function (t) {
+    var o = document.createElement('option');
+    o.value = t.id; o.textContent = t.label + ' (' + t.interval + 'd)';
+    $('dtype').appendChild(o);
+  });
+  $('ddate').value = DonorEngine.iso(new Date());
+
+  function save() { try { localStorage.setItem(LS, JSON.stringify(donations)); } catch (e) {} }
+
+  function render() {
+    var today = new Date();
+    var st = DonorEngine.status(donations, today);
+    $('cards').innerHTML = st.map(function (s) {
+      var t = DonorEngine.typeById(s.type);
+      var badge = s.eligible ? '<span class="badge-e ok">Eligible now</span>'
+        : (s.capHit ? '<span class="badge-e cap">Year cap reached</span>' : '<span class="badge-e wait">Waiting</span>');
+      var main = s.eligible ? 'Now' : s.daysLeft + 'd';
+      var detail = 'Next: ' + s.nextDate
+        + (s.lastDate ? ' - last ' + s.lastDate : '')
+        + '<br>' + s.countLast12 + ' of ' + t.perYear + ' allowed per 12 mo';
+      return '<div class="tcard' + (s.eligible ? ' eligible' : '') + '"><div class="name">' + t.label + '</div>'
+        + '<div class="status ' + (s.eligible ? 'yes' : 'no') + '">' + main + '</div>'
+        + '<div class="detail">' + detail + '</div>' + badge + '</div>';
+    }).join('');
+
+    var tot = DonorEngine.totals(donations);
+    $('stDon').textContent = tot.donations;
+    $('stLit').textContent = tot.liters;
+    $('stLives').textContent = tot.lives;
+    $('stStreak').textContent = DonorEngine.yearStreak(donations, today);
+
+    var sorted = donations.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 12);
+    $('hist').innerHTML = sorted.length ? sorted.map(function (d, i) {
+      var t = DonorEngine.typeById(d.type);
+      return '<div class="tx"><span>' + d.date + ' - ' + (t ? t.label : d.type) + '</span><button class="remove" data-d="' + d.date + '" data-t="' + d.type + '">&#10005;</button></div>';
+    }).join('') : '<div class="hint">Nothing logged yet.</div>';
+  }
+
+  $('log').addEventListener('click', function () {
+    var date = $('ddate').value, type = $('dtype').value;
+    if (!date) return;
+    donations.push({ date: date, type: type });
+    save(); render();
+  });
+
+  $('hist').addEventListener('click', function (e) {
+    if (!e.target.classList.contains('remove')) return;
+    var d = e.target.getAttribute('data-d'), t = e.target.getAttribute('data-t');
+    var i = donations.findIndex(function (x) { return x.date === d && x.type === t; });
+    if (i >= 0) { donations.splice(i, 1); save(); render(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
